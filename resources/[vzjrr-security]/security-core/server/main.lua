@@ -9,15 +9,21 @@
   (docs/ENVIRONMENT_AUDIT.md §6.3). Keeping it thin is what keeps the untested
   surface small (docs/ARCHITECTURE.md §2 C2).
 
-  Files are loaded by fxmanifest order, so the lib modules are already global-free
-  locals returned by their own chunks -- we re-require them through the resource's
-  module loader.
+  fxmanifest load order is LOAD-BEARING: every lib/ module must be listed before
+  this file, because it reads them off the shared `SecLab` table rather than
+  requiring them. The asserts below fail loudly if that order is ever broken.
 ]]
 
-local mode_lib   = require 'lib.mode'
-local config_lib = require 'lib.config'
-local logger_lib = require 'lib.logger'
-local posture_lib= require 'lib.posture'
+--[[
+  The pure modules in lib/ are loaded by earlier `server_scripts` entries and publish
+  themselves on the resource-scoped `SecLab` table. FiveM has no `require` for
+  resource scripts, so this is how an adapter reaches them (see the dual-export note
+  at the foot of any lib/ module).
+]]
+local mode_lib    = assert(SecLab and SecLab.mode,    'security-core: lib/mode.lua did not load')
+local config_lib  = assert(SecLab and SecLab.config,  'security-core: lib/config.lua did not load')
+local logger_lib  = assert(SecLab and SecLab.logger,  'security-core: lib/logger.lua did not load')
+local posture_lib = assert(SecLab and SecLab.posture, 'security-core: lib/posture.lua did not load')
 
 local RESOURCE = GetCurrentResourceName()
 

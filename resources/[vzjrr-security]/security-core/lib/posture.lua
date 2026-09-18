@@ -204,4 +204,23 @@ function M.is_blind(convars)
   return s ~= 'on', 'onesync must be "on" for server-side game events and camera natives'
 end
 
+
+--[[
+  DUAL EXPORT -- see docs/ARCHITECTURE.md §3.2 "Module loading".
+
+  FiveM has no documented `require` for resource scripts: every file listed in
+  `server_scripts` is loaded as a plain chunk into one shared Lua state, and the
+  chunk's return value is DISCARDED. So returning the table is not enough to make
+  this module reachable inside FXServer.
+
+  Vanilla Lua 5.4 (the CI tier) is the opposite: it uses the return value and has
+  no shared namespace.
+
+  Publishing to a single resource-scoped global satisfies both without an
+  environment check. Each resource gets its own Lua state, so `SecLab` does not
+  leak between resources.
+]]
+SecLab = SecLab or {}
+SecLab.posture = M
+
 return M

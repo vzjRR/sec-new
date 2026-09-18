@@ -125,7 +125,39 @@ database — the same artifact serves forensics *and* regression testing.
 
 Load order matters: `security-core` must start first (it owns config and logging).
 
-### 3.2 Repository layout, and why `detectors/` is not code
+### 3.2 Module loading — a FiveM constraint worth knowing
+
+**FiveM has no documented `require` for resource scripts.** Every file listed in
+`server_scripts` is loaded as a plain chunk into one shared per-resource Lua state, and
+**the chunk's return value is discarded**. Vanilla Lua 5.4 — the CI tier — is the
+opposite: it uses the return value and has no shared namespace.
+
+So every pure module ends with a **dual export**:
+
+```lua
+SecLab = SecLab or {}
+SecLab.schema = M
+return M          -- used by require() in CI; ignored by FXServer
+```
+
+Adapters read siblings off `SecLab` with an `assert`, never `require`. Each resource has
+its own Lua state, so `SecLab` does not leak between resources.
+
+Two consequences:
+
+1. **`fxmanifest.lua` ordering is load-bearing.** A module must be listed before anything
+   that reads it. The asserts in each adapter fail loudly if that order breaks.
+2. **`tests/unit/test_module_loading.lua` simulates this loading model** — `loadfile`
+   into a shared environment, return value thrown away — and checks that every module is
+   still reachable, that it is functional and not merely present, and that the manifest
+   lists it in the right order.
+
+That test exists because an earlier version of this codebase used `require 'lib.mode'`
+in its adapters. It passed CI and **would have failed at boot on a real server** — the
+precise class of defect Tier A is otherwise blind to. It also immediately caught a
+missing `fxmanifest.lua` for `security-forensics`.
+
+### 3.3 Repository layout, and why `detectors/` is not code
 
 FiveM resources cannot include files from outside their own folder, so **implementation
 lives inside the resources**. The top-level `detectors/<domain>/` directories hold each

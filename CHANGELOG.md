@@ -79,7 +79,21 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state
   mutation, with a self-test.
-- `tests/harness.lua` + **237 unit tests**.
+- `tests/harness.lua` + **249 unit tests**.
+
+#### Fixed
+- **Resource boot would have failed.** The adapters used `require 'lib.mode'`, but FiveM
+  has no `require` for resource scripts: `server_scripts` files load as plain chunks into
+  one shared per-resource Lua state and the chunk's return value is discarded (R-004).
+  CI was green and the resources would not have loaded. Every pure module now
+  dual-exports — publishing to a resource-scoped `SecLab` global *and* returning the
+  table — so FXServer and vanilla Lua both work with no environment check. Adapters
+  `assert` their dependencies, since `fxmanifest.lua` order is now load-bearing.
+- Added `tests/unit/test_module_loading.lua`, which simulates FXServer's loading model
+  (`loadfile` into a shared environment, return discarded) and checks that each module is
+  reachable, functional, and listed in the manifest in the right order. It is the only
+  Tier A test that covers the boot path, and it immediately caught a missing
+  `fxmanifest.lua` for `security-forensics`.
 
 #### Findings
 - **OBSERVATION** — FXServer build 35945 requires a valid `sv_licenseKey`. The
@@ -92,6 +106,8 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
   `sv_filterRequestControl` all default to their permissive settings.
 - **OBSERVATION** — vanilla Lua 5.4 rejects CfxLua backtick hash literals and has no
   `vector3`, which forces the pure-logic / thin-adapter split.
+- **OBSERVATION** — FiveM resource scripts have no documented `require`, and chunk
+  return values are discarded (R-004). Tier A can pass while a resource is unloadable.
 
 #### Notes
 - No enforcement of any kind. Detectors are disabled by default.

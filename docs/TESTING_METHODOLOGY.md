@@ -50,6 +50,13 @@ These are not generic advice; each came from a bug in this repository.
 the rejection to mention the expected reason. Without it a validation test keeps passing
 after it starts failing for an unrelated reason.
 
+**Simulate the runtime's loading contract.** `tests/unit/test_module_loading.lua` loads
+each resource the way FXServer does — `loadfile` into a shared environment, chunk return
+value discarded — because FiveM has no `require` for resource scripts (R-004). An
+earlier version of this codebase used `require` in its adapters: CI was green and the
+resource would not have booted. Tier A can pass while the resource is unloadable, and
+the answer is to model the loading contract, not to trust Tier A less.
+
 **Test the guards.** `scripts/check_no_enforcement.lua` self-tests before it runs,
 because the first grep-based version **silently passed everything** — an unescaped `(`
 made the regex invalid and the error was swallowed. A later version missed the
@@ -111,6 +118,8 @@ routing-bucket changes · respawn.
 | **EXP-006** | Which resources are installed, and which register client-triggerable events that mutate server state? | event contract inventory, economy scope | Enumerate `RegisterNetEvent` handlers across installed resources |
 | **EXP-007** | Is `metadata.isdead` reliably set server-side at the moment of death? | `combat.dead_shooter` | Controlled deaths; compare timing against `GET_ENTITY_HEALTH` |
 | **EXP-008** | Is `io.open` append available to server-side Lua on the target build? Where is the resource CWD? | the JSONL sink | Attempt a write from `security-telemetry`; inspect the path |
+
+| **EXP-009** | Is `require`/`package` available at all to server-side resource scripts? | confirms R-004 and the dual-export design | `print(type(require), type(package))` from a server script |
 
 `EXP-008` is worth calling out: the JSONL sink is written but **unverified**. If `io` is
 restricted on the target build, the sink must change to KVP batching or an HTTP shipper.

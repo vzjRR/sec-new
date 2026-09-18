@@ -7,16 +7,26 @@
   state (charter §4, §10).
 ]]
 
-local schema    = require 'logic.schema'
-local clock_lib = require 'logic.clock'
-local envelope  = require 'logic.envelope'
-local normalize = require 'logic.normalize'
-local buffer_lib= require 'logic.buffer'
-local memory_sink = require 'sinks.memory'
-local jsonl_sink  = require 'sinks.jsonl'
-local identity   = require 'adapters.identity'
-local events     = require 'adapters.events'
-local pollers    = require 'adapters.pollers'
+--[[
+  Modules are published on the resource-scoped `SecLab` table by earlier
+  `server_scripts` entries; FiveM has no `require` for resource scripts. The
+  fxmanifest order is load-bearing and these asserts fail loudly if it breaks.
+]]
+local function need(key)
+  return assert(SecLab and SecLab[key],
+    'security-telemetry: module "' .. key .. '" did not load -- check fxmanifest order')
+end
+
+local schema      = need('schema')
+local clock_lib   = need('clock')
+local envelope    = need('envelope')
+local normalize   = need('normalize')
+local buffer_lib  = need('buffer')
+local memory_sink = need('sink_memory')
+local jsonl_sink  = need('sink_jsonl')
+local identity    = need('identity')
+local events      = need('events')
+local pollers     = need('pollers')
 
 local RESOURCE = GetCurrentResourceName()
 

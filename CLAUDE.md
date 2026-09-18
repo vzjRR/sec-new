@@ -55,6 +55,23 @@ sinks/               Keep them THIN — they are the untested surface.
 If you find yourself wanting a native inside `logic/`, the design is wrong: have the
 adapter read it and pass a plain table.
 
+### Module loading — do not use `require` in a resource
+
+FiveM has **no `require`** for resource scripts. `server_scripts` files load as plain
+chunks into one shared per-resource Lua state, and **the chunk's return value is
+discarded** (`knowledge/research/R-004`). So every pure module ends with:
+
+```lua
+SecLab = SecLab or {}
+SecLab.schema = M
+return M          -- used by require() in CI; ignored by FXServer
+```
+
+Adapters read siblings off `SecLab` with an `assert`, never `require`. **`fxmanifest.lua`
+order is load-bearing.** `tests/unit/test_module_loading.lua` simulates this and is the
+only Tier A test covering the boot path — it exists because an earlier version used
+`require`, passed CI, and would not have booted.
+
 ## 4. Build the observatory before the police
 
 Phase order is not negotiable (charter §4, §18):
@@ -244,7 +261,7 @@ telemetry schema + validator; clock, envelope, normalizers, bounded buffer;
 LAB/PRODUCTION mode; typed config; structured logger; ConVar posture auditor;
 `security-core` and `security-telemetry` resources with adapters; the no-enforcement
 guard; Phase 3 forensics core (detection type with enforced confidence caps, incident
-lifecycle, gap-aware timeline); **237 unit tests**.
+lifecycle, gap-aware timeline); **249 unit tests**.
 
 **Not verified:** anything requiring FXServer. **Nothing in this repository has yet run
 inside a FiveM server.** That is a consequence of C2, not an oversight.
