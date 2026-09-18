@@ -96,13 +96,39 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
   and its telemetry into a reviewable bundle, and `review()` refuses to call it
   reviewable when the evidence does not support the conclusion.
 
+#### Added — Phase 4 start: the detector registry and detector #1
+- `security-detectors/logic/registry.lua` — supports two detector kinds, `record` and
+  `periodic`. Posture's subject is the server's configuration rather than a telemetry
+  record, and forcing it through `detect(state, record, config)` would have meant
+  inventing a fake record to trigger it. A throwing detector is contained, counted and
+  disabled after three *consecutive* failures; a success resets the counter so an
+  intermittent fault does not accumulate towards a trip. The registry refuses a result
+  whose `detector_id` or `detector_version` does not match the registration, so one
+  detector cannot emit findings attributed to another and an incident's detector list
+  cannot be a lie.
+- `security-detectors/logic/server_posture.lua` — detector #1. A pure transform of
+  posture findings into `DetectionResult`s, keyed to `SYSTEM` because the subject is
+  the server. Confidence is 1.0 and legitimately uncapped: this is a direct read of
+  configuration, not an inference about behaviour. An unrecognised severity **raises**
+  rather than defaulting to `info`, because defaulting would downgrade a critical
+  finding into one that gets ignored.
+- Adapters for `security-forensics` and `security-detectors`, plus a file backend for
+  the evidence store and codec exports on `security-telemetry`. Every cross-resource
+  call passes and returns **plain tables only**, so nothing depends on whether a table
+  of functions survives an `exports` call (UNVERIFIED — EXP-010).
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state
   mutation, with a self-test.
-- `tests/harness.lua` + **330 unit tests**.
+- `tests/harness.lua` + **378 unit tests**.
 
 #### Fixed
+- **A manifest-ordering test passed on prose.** It searched the manifest for
+  `server/main.lua` as a bare substring, and one manifest's comment mentions that path
+  while explaining load order — so the match landed in the comment and the assertion
+  could not fail. It now matches the quoted entry, and this was verified by
+  temporarily mis-ordering a manifest and confirming the test fails.
 - **`read()` claimed every retrieval was incomplete.** `complete and nil or
   string.format(...)` always yields the string, because Lua's `and` cannot produce
   nil. The same trap was independently present in a test helper, where it meant the

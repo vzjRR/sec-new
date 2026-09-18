@@ -1,8 +1,10 @@
 # `server.posture` — ConVar hardening audit
 
-- **Status:** logic **implemented and unit-tested** (Tier A, 20 tests).
-  Wiring as a formal `DetectionResult` emitter: TODO.
-- **Implementation:** `resources/[vzjrr-security]/security-core/lib/posture.lua`
+- **Status:** **implemented and wired** (Tier A). Emits formal `DetectionResult`s
+  through the registry. Boot and live behaviour unverified (Tier B).
+- **Implementation:** audit logic in
+  `resources/[vzjrr-security]/security-core/lib/posture.lua`; detector in
+  `resources/[vzjrr-security]/security-detectors/logic/server_posture.lua`
 - **Decision record:** `knowledge/decisions/D-003-posture-audit-ships-first.md`
 - **Version:** 1
 
@@ -115,8 +117,27 @@ sentinel precisely because "unset" and "set to false" must stay distinguishable.
 
 None. This is the only planned detector that is not waiting on an experiment.
 
+## As wired
+
+`server.posture` is a **periodic** detector, not a record-driven one. Its subject is
+the server's configuration rather than any telemetry record, and forcing it through
+`detect(state, record, config)` would have meant inventing a fake record to trigger
+it. The registry therefore supports two kinds (`logic/registry.lua`); both are pure
+and both build results through the same `detection_new`.
+
+One finding becomes one `DetectionResult`, because each is independently actionable.
+`PLATFORM-BLIND` is emitted separately from the hardening findings, for the reason in
+§"is_blind" above.
+
+An unrecognised severity **raises** rather than defaulting. An earlier version fell
+back to `info`, which is a downgrade — a critical finding with a typo'd severity
+would have been reported as informational and ignored. A test pins every severity
+`posture.lua` can emit against the detector's map, so adding one fails CI rather than
+raising on a live server.
+
 ## Remaining work
 
-1. Emit findings as formal `DetectionResult`s once Phase 3 defines the type.
-2. Add a `system`-category telemetry record per audit run so posture drift over time
+1. Add a `system`-category telemetry record per audit run so posture drift over time
    becomes visible in the evidence store.
+2. Confirm on the lab that `GetConvar` returns the `__unset__` sentinel for genuinely
+   unset variables, so "unset" and "set to false" stay distinguishable.

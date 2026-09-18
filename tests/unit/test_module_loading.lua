@@ -39,13 +39,25 @@ local RESOURCES = {
                'sink_memory', 'sink_jsonl' },
   },
   {
+    name = 'security-detectors',
+    dir = ROOT .. 'security-detectors/',
+    files = { 'logic/registry.lua', 'logic/server_posture.lua' },
+    expect = { 'registry', 'server_posture' },
+  },
+  {
     name = 'security-forensics',
     dir = ROOT .. 'security-forensics/',
     files = { 'logic/detection.lua', 'logic/incident.lua', 'logic/timeline.lua',
-              'logic/evidence.lua', 'logic/investigation.lua' },
-    expect = { 'detection', 'incident', 'timeline', 'evidence', 'investigation' },
+              'logic/evidence.lua', 'logic/investigation.lua', 'sinks/file.lua' },
+    expect = { 'detection', 'incident', 'timeline', 'evidence', 'investigation',
+               'sink_file' },
   },
 }
+
+local function resource(name)
+  for _, r in ipairs(RESOURCES) do if r.name == name then return r end end
+  error('no such resource in this test: ' .. name)
+end
 
 --[[
   Load a resource's scripts the way FXServer does.
@@ -68,6 +80,19 @@ local function load_like_fxserver(res)
   return shared.SecLab, nil
 end
 
+--[[
+  Find a script entry's position in a manifest.
+
+  Matches the QUOTED form ('server/main.lua'), not the bare path: the manifests
+  discuss load order in their comments, and an earlier prose mention would otherwise
+  satisfy an ordering assertion that the actual entries violate. That exact
+  false pass happened once.
+]]
+local function entry_pos(manifest, rel)
+  return manifest:find("'" .. rel .. "'", 1, true)
+       or manifest:find('"' .. rel .. '"', 1, true)
+end
+
 H.suite('module loading: FXServer model (return value discarded)')
 
 for _, res in ipairs(RESOURCES) do
@@ -85,14 +110,17 @@ end
 H.test('a module that needs a sibling resolves it from SecLab, not require', function()
   -- envelope.lua depends on schema.lua. Under FXServer there is no `require`, so it
   -- must find schema on the shared table.
-  local res = RESOURCES[2]
-  local ns = assert(load_like_fxserver(res))
+  local ns = assert(load_like_fxserver(resource('security-telemetry')))
   H.eq(type(ns.envelope), 'table')
   H.eq(type(ns.schema), 'table')
 end)
 
 H.test('incident.lua resolves detection.lua from SecLab', function()
-  local ns = assert(load_like_fxserver(RESOURCES[3]))
+  local forensics
+  for _, r in ipairs(RESOURCES) do
+    if r.name == 'security-forensics' then forensics = r end
+  end
+  local ns = assert(load_like_fxserver(forensics))
   H.eq(type(ns.incident), 'table')
   H.eq(type(ns.detection), 'table')
 end)
@@ -101,7 +129,7 @@ H.suite('module loading: the published module actually works')
 
 H.test('a SecLab-loaded module is functional, not just present', function()
   -- Presence is not enough: the published table must be the real module.
-  local ns = assert(load_like_fxserver(RESOURCES[1]))
+  local ns = assert(load_like_fxserver(resource('security-core')))
   H.eq(ns.mode.resolve('LAB'), 'LAB')
   H.eq(ns.mode.resolve('typo'), 'PRODUCTION')
   H.eq(ns.config.defaults()['detectors.enabled'], false)
@@ -110,7 +138,7 @@ H.test('a SecLab-loaded module is functional, not just present', function()
 end)
 
 H.test('a telemetry record can be built end to end via SecLab only', function()
-  local ns = assert(load_like_fxserver(RESOURCES[2]))
+  local ns = assert(load_like_fxserver(resource('security-telemetry')))
   local c = ns.clock.new(function() return 1758204000000 end, function() return 500 end)
   local b = ns.envelope.new(c, { mode = 'LAB' })
   local rec = ns.normalize.weapon_damage(b, 'QB:ABCD1234', 7,
@@ -130,7 +158,7 @@ for _, res in ipairs(RESOURCES) do
       'missing fxmanifest for ' .. res.name)
     local manifest = fh:read('a'); fh:close()
     for _, rel in ipairs(res.files) do
-      H.ok(manifest:find(rel, 1, true),
+      H.ok(entry_pos(manifest, rel),
         ('fxmanifest.lua for %s does not list %s'):format(res.name, rel))
     end
   end)
@@ -140,10 +168,33 @@ H.test('security-core lists lib modules BEFORE server/main.lua', function()
   -- server/main.lua reads SecLab at load time, so order is load-bearing.
   local fh = assert(io.open(ROOT .. 'security-core/fxmanifest.lua', 'r'))
   local m = fh:read('a'); fh:close()
-  local main_at = m:find('server/main.lua', 1, true)
+  local main_at = entry_pos(m, 'server/main.lua')
   H.ok(main_at, 'server/main.lua must be listed')
   for _, rel in ipairs({ 'lib/mode.lua', 'lib/config.lua', 'lib/logger.lua', 'lib/posture.lua' }) do
-    local at = m:find(rel, 1, true)
+    local at = entry_pos(m, rel)
+    H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
+  end
+end)
+
+H.test('security-detectors lists logic BEFORE server/main.lua', function()
+  local fh = assert(io.open(ROOT .. 'security-detectors/fxmanifest.lua', 'r'))
+  local m = fh:read('a'); fh:close()
+  local main_at = entry_pos(m, 'server/main.lua')
+  H.ok(main_at, 'server/main.lua must be listed')
+  for _, rel in ipairs({ 'logic/registry.lua', 'logic/server_posture.lua' }) do
+    local at = entry_pos(m, rel)
+    H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
+  end
+end)
+
+H.test('security-forensics lists logic and sinks BEFORE server/main.lua', function()
+  local fh = assert(io.open(ROOT .. 'security-forensics/fxmanifest.lua', 'r'))
+  local m = fh:read('a'); fh:close()
+  local main_at = entry_pos(m, 'server/main.lua')
+  H.ok(main_at, 'server/main.lua must be listed')
+  for _, rel in ipairs({ 'logic/detection.lua', 'logic/incident.lua', 'logic/timeline.lua',
+                         'logic/evidence.lua', 'logic/investigation.lua', 'sinks/file.lua' }) do
+    local at = entry_pos(m, rel)
     H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
   end
 end)
@@ -151,11 +202,11 @@ end)
 H.test('security-telemetry lists logic and adapters BEFORE server/main.lua', function()
   local fh = assert(io.open(ROOT .. 'security-telemetry/fxmanifest.lua', 'r'))
   local m = fh:read('a'); fh:close()
-  local main_at = m:find('server/main.lua', 1, true)
+  local main_at = entry_pos(m, 'server/main.lua')
   H.ok(main_at)
   for _, rel in ipairs({ 'logic/schema.lua', 'logic/buffer.lua', 'sinks/jsonl.lua',
                          'adapters/identity.lua', 'adapters/pollers.lua' }) do
-    local at = m:find(rel, 1, true)
+    local at = entry_pos(m, rel)
     H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
   end
 end)

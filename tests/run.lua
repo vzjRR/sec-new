@@ -7,10 +7,12 @@
 local TELEMETRY = 'resources/[vzjrr-security]/security-telemetry/'
 local CORE      = 'resources/[vzjrr-security]/security-core/'
 local FORENSICS = 'resources/[vzjrr-security]/security-forensics/'
+local DETECTORS = 'resources/[vzjrr-security]/security-detectors/'
 package.path = table.concat({
   TELEMETRY .. '?.lua',
   CORE .. '?.lua',
   FORENSICS .. '?.lua',
+  DETECTORS .. '?.lua',
   './?.lua',
   package.path,
 }, ';')

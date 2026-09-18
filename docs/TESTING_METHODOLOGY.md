@@ -121,6 +121,8 @@ routing-bucket changes · respawn.
 
 | **EXP-009** | Is `require`/`package` available at all to server-side resource scripts? | confirms R-004 and the dual-export design | `print(type(require), type(package))` from a server script |
 
+| **EXP-010** | Does a table containing functions survive an `exports` call between resources? | cross-resource design | Export a function returning `{ f = function() end }` and inspect it from another resource |
+
 `EXP-008` is worth calling out: the JSONL sink is written but **unverified**. If `io` is
 restricted on the target build, the sink must change to KVP batching or an HTTP shipper.
 The sink interface exists so that is a swap, not a rewrite.

@@ -22,6 +22,7 @@ local clock_lib   = need('clock')
 local envelope    = need('envelope')
 local normalize   = need('normalize')
 local buffer_lib  = need('buffer')
+local jsonl       = need('jsonl')
 local memory_sink = need('sink_memory')
 local jsonl_sink  = need('sink_jsonl')
 local identity    = need('identity')
@@ -173,6 +174,23 @@ end)
 
 exports('emit', emit)
 exports('flush', flush)
+
+--[[
+  The JSON codec is exported because the other security-* resources each run in their
+  own Lua state and cannot require it. These exports pass and return plain values
+  only -- a string in, a string out -- so they do not depend on whether a table of
+  functions survives an export call (UNVERIFIED, EXP-010).
+]]
+exports('encodeLine', function(value)
+  local line, err = jsonl.encode_line(value)
+  if not line then return nil, err end
+  return line
+end)
+
+exports('decodeLines', function(body)
+  local records, errors = jsonl.decode_lines(body)
+  return { records = records, errors = errors }
+end)
 
 AddEventHandler('onResourceStart', function(resource)
   if resource ~= RESOURCE then return end

@@ -87,13 +87,21 @@ mechanism rather than prose:
   investigator cannot otherwise tell whether the alternatives were ruled out or never
   examined.
 
-## Phase 4 — First detectors · partly **BLOCKED**
+## Phase 4 — First detectors · **started**, partly **BLOCKED**
+
+The detector registry exists and supports two kinds: `record`
+(`detect(state, record, config)`) and `periodic` (`evaluate(context, config)`). A
+detector that throws is contained by `pcall`, counted, and disabled after three
+*consecutive* failures — a success resets the counter, so an intermittent fault does
+not accumulate towards a trip. The registry also refuses a result whose
+`detector_id` or `detector_version` does not match the registration, so one detector
+cannot emit findings attributed to another.
 
 Shipping order by defensibility (`DETECTION_MODEL.md` §7):
 
 | # | Detector | Status |
 | --- | --- | --- |
-| 1 | `server.posture` | logic **DONE**; wiring as a detector TODO |
+| 1 | `server.posture` | **DONE (Tier A)** — registry + detector + adapter wired |
 | 2 | `events.contract` | BLOCKED on EXP-006 |
 | 3 | `entity.rate` | TODO |
 | 4 | `combat.dead_shooter` | BLOCKED on EXP-007 |
@@ -143,8 +151,10 @@ detection; only measurement does.
 3. Then `EXP-001` and `EXP-002`, which unblock the aim and combat work.
 
 **Tier A (can proceed without the lab):**
-1. ~~Phase 3 forensics~~ — **done**: detection type, incident lifecycle, timeline,
-   JSON codec, evidence store, investigation export.
-2. Wire `server.posture` as a formal detector emitting `DetectionResult`s.
+1. ~~Phase 3 forensics~~ — **done**.
+2. ~~Wire `server.posture` as a formal detector~~ — **done**: registry with a circuit
+   breaker, the detector, and the adapters. The full vertical slice
+   (audit → detector → registry → incident → investigation bundle) is covered by one
+   test.
 3. Build the fixture replay harness so Tier B captures become regression tests.
 4. Write the `detectors/*/` design specs for detectors 2–5.

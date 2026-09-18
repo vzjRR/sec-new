@@ -12,15 +12,12 @@ version '0.1.0'
 repository 'https://github.com/vzjRR/sec-new'
 
 dependency 'security-core'
+dependency 'security-telemetry'
 
 --[[
-  Pure logic only for now. The evidence store and investigation API are the remaining
-  Phase 3 items (docs/ROADMAP.md), so this resource has no adapter yet -- it exposes
-  its logic to the other security-* resources through the shared SecLab table and,
-  once the store exists, through exports.
-
-  Order is load-bearing: detection.lua must precede incident.lua, and timeline.lua
-  plus detection.lua must precede investigation.lua, which reads both.
+  Order is load-bearing: detection.lua must precede incident.lua; timeline.lua and
+  detection.lua must precede investigation.lua, which reads both; and every logic
+  module must precede server/main.lua, which asserts on them.
 ]]
 server_scripts {
     'logic/detection.lua',
@@ -28,6 +25,8 @@ server_scripts {
     'logic/timeline.lua',
     'logic/evidence.lua',
     'logic/investigation.lua',
+    'sinks/file.lua',
+    'server/main.lua',
 }
 
 provides { 'security-forensics' }
