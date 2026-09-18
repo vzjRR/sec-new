@@ -50,15 +50,16 @@ Charter §26 requires proving `FiveM → telemetry → normalized → storage �
 investigation output` for a **single** event type before widening coverage. That
 demonstration is the next Tier B milestone.
 
-## Phase 3 — Forensics · **core DONE (Tier A)**
+## Phase 3 — Forensics · **DONE (Tier A)**
 
 | Item | Status |
 | --- | --- |
 | `DetectionResult` type with the confidence policy **enforced in code** | DONE |
 | Incident model + lifecycle state machine | DONE |
 | Gap-aware timeline assembly | DONE |
-| Evidence store (persistence of incidents/timelines) | TODO |
-| Investigation API / export | TODO |
+| Deterministic JSON codec (encoder + strict decoder) | DONE |
+| Evidence store: append-only, accountable, integrity digest | DONE |
+| Investigation bundle + review + text render | DONE |
 
 Three properties are worth noting, because they turn documented policy into
 mechanism rather than prose:
@@ -74,6 +75,17 @@ mechanism rather than prose:
 - **Incident confidence is `max`, not a sum.** Combining confidences requires arguing
   independence, which is Phase 5 work. Until then `max` is the honest answer and the
   summary says so.
+- **Loss is accounted for at every layer.** The ring buffer counts drops, the timeline
+  surfaces `seq` gaps as first-class entries, the store counts encode and backend
+  failures, and the investigation `review()` refuses to call a bundle reviewable while
+  any of them is non-zero. A store reporting "12 records" after 3 failed writes would
+  be worse than no store.
+- **`review()` refuses to bless an unsupportable conclusion.** A `CONFIRMED` incident
+  whose timeline contains no server-observed record is flagged *critical*: a
+  confirmation resting entirely on client claims is not evidence. A `CONFIRMED`
+  incident with no benign cause recorded as considered is flagged too, because an
+  investigator cannot otherwise tell whether the alternatives were ruled out or never
+  examined.
 
 ## Phase 4 — First detectors · partly **BLOCKED**
 
@@ -131,8 +143,8 @@ detection; only measurement does.
 3. Then `EXP-001` and `EXP-002`, which unblock the aim and combat work.
 
 **Tier A (can proceed without the lab):**
-1. ~~Phase 3 forensics core~~ — **done**: detection type, incident lifecycle, timeline.
-2. Evidence store and investigation export (the remaining Phase 3 items).
-3. Wire `server.posture` as a formal detector emitting `DetectionResult`s.
-4. Build the fixture replay harness so Tier B captures become regression tests.
-5. Write the `detectors/*/` design specs for detectors 2–5.
+1. ~~Phase 3 forensics~~ — **done**: detection type, incident lifecycle, timeline,
+   JSON codec, evidence store, investigation export.
+2. Wire `server.posture` as a formal detector emitting `DetectionResult`s.
+3. Build the fixture replay harness so Tier B captures become regression tests.
+4. Write the `detectors/*/` design specs for detectors 2–5.

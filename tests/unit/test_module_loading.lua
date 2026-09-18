@@ -32,17 +32,18 @@ local RESOURCES = {
     dir = ROOT .. 'security-telemetry/',
     files = {
       'logic/schema.lua', 'logic/clock.lua', 'logic/envelope.lua',
-      'logic/normalize.lua', 'logic/buffer.lua',
+      'logic/normalize.lua', 'logic/buffer.lua', 'logic/jsonl.lua',
       'sinks/memory.lua', 'sinks/jsonl.lua',
     },
-    expect = { 'schema', 'clock', 'envelope', 'normalize', 'buffer',
+    expect = { 'schema', 'clock', 'envelope', 'normalize', 'buffer', 'jsonl',
                'sink_memory', 'sink_jsonl' },
   },
   {
     name = 'security-forensics',
     dir = ROOT .. 'security-forensics/',
-    files = { 'logic/detection.lua', 'logic/incident.lua', 'logic/timeline.lua' },
-    expect = { 'detection', 'incident', 'timeline' },
+    files = { 'logic/detection.lua', 'logic/incident.lua', 'logic/timeline.lua',
+              'logic/evidence.lua', 'logic/investigation.lua' },
+    expect = { 'detection', 'incident', 'timeline', 'evidence', 'investigation' },
   },
 }
 

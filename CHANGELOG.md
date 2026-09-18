@@ -75,13 +75,43 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
   suppress false gap reports. `trust_summary()` states how much of a story the
   attacker controlled.
 
+#### Added — Phase 3 completion (pure, unit-tested)
+- `security-telemetry/logic/jsonl.lua` — a deterministic JSON encoder and strict
+  decoder, purpose-built for telemetry records. **Keys are sorted**, because
+  `json.encode` gives no order guarantee and fixtures must be byte-comparable; and the
+  global `json` does not exist under vanilla Lua, so without this CI could neither
+  write nor replay an evidence file. Floats are formatted to round-trip bit-exactly
+  (verified against `0.1 + 0.2` and `1.7976931348623157e308`). NaN, infinity, cycles,
+  mixed array/map tables and sparse arrays are **rejected with a reason** rather than
+  mangled. `decode_lines` isolates damage per line, so one truncated write does not
+  discard a whole evidence file.
+- `security-forensics/logic/evidence.lua` — append-only store with injected
+  persistence. Counts encode failures, backend failures and corrupt lines separately;
+  `is_complete()` goes false the moment anything is lost. Incident snapshots
+  accumulate rather than replace, so the history of how an assessment evolved
+  survives. Path segments are sanitised, because `category` arrives from a record and
+  a `../` would otherwise choose where a write lands. An FNV-1a chained digest detects
+  accidental corruption — documented explicitly as **not** cryptographic tamper-proofing.
+- `security-forensics/logic/investigation.lua` — assembles an incident, its detections
+  and its telemetry into a reviewable bundle, and `review()` refuses to call it
+  reviewable when the evidence does not support the conclusion.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state
   mutation, with a self-test.
-- `tests/harness.lua` + **249 unit tests**.
+- `tests/harness.lua` + **330 unit tests**.
 
 #### Fixed
+- **`read()` claimed every retrieval was incomplete.** `complete and nil or
+  string.format(...)` always yields the string, because Lua's `and` cannot produce
+  nil. The same trap was independently present in a test helper, where it meant the
+  write-only backend case was never actually exercised. Both are now explicit `if`
+  statements with a comment saying why.
+- **`investigation.render()` crashed on a bundle with no review block** — a nil index
+  on `review.problems`. A render that throws is worst precisely when it matters, so it
+  is now nil-safe throughout and covered by an 11-shape fuzz test. An unassessed
+  bundle now reports "not assessed" rather than looking clean.
 - **Resource boot would have failed.** The adapters used `require 'lib.mode'`, but FiveM
   has no `require` for resource scripts: `server_scripts` files load as plain chunks into
   one shared per-resource Lua state and the chunk's return value is discarded (R-004).

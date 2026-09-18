@@ -19,6 +19,7 @@ server_scripts {
     'logic/envelope.lua',
     'logic/normalize.lua',
     'logic/buffer.lua',
+    'logic/jsonl.lua',
     -- sinks and adapters (impure; verified on a live server only)
     'sinks/memory.lua',
     'sinks/jsonl.lua',

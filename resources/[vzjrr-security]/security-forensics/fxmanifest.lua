@@ -19,12 +19,15 @@ dependency 'security-core'
   its logic to the other security-* resources through the shared SecLab table and,
   once the store exists, through exports.
 
-  Order is load-bearing: detection.lua must precede incident.lua, which reads it.
+  Order is load-bearing: detection.lua must precede incident.lua, and timeline.lua
+  plus detection.lua must precede investigation.lua, which reads both.
 ]]
 server_scripts {
     'logic/detection.lua',
     'logic/incident.lua',
     'logic/timeline.lua',
+    'logic/evidence.lua',
+    'logic/investigation.lua',
 }
 
 provides { 'security-forensics' }
