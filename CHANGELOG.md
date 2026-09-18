@@ -117,6 +117,24 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
   call passes and returns **plain tables only**, so nothing depends on whether a table
   of functions survives an `exports` call (UNVERIFIED — EXP-010).
 
+#### Added — fixture replay (the Tier B → Tier A bridge)
+- `tests/replay.lua` + `scripts/replay.sh`, wired into `scripts/verify.sh`. Replays a
+  recorded input through the real pipeline and compares the outcome. Four rules are
+  enforced mechanically rather than documented, and each was verified by trying to
+  violate it: `--write` **refuses** to replace an existing `expected` block; a severity
+  regression is caught; a spurious extra detection is caught by the hardened-server
+  fixture; and provenance is mandatory, with a `telemetry` fixture declaring
+  `origin: synthetic` rejected outright.
+- `lab/fixtures/` with the contract and three posture fixtures:
+  `posture-default-server` (8 detections, worst critical),
+  `posture-hardened-server` (**zero** detections — the false-positive guard), and
+  `posture-blind-server` (`PLATFORM-BLIND` plus findings).
+- Comparison is on signal, severity and confidence, never prose: explanations are
+  expected to improve, and comparing them would break every fixture on an editorial
+  change and train everyone to rewrite fixtures.
+- The harness reports origins separately and states plainly when there are no captured
+  fixtures, so a green run cannot imply coverage that does not exist.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state

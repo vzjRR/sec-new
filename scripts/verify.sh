@@ -17,6 +17,7 @@ run() {
 run "Lua syntax gate"        bash scripts/lint.sh
 run "no-enforcement guard"   bash scripts/check-no-enforcement.sh
 run "unit tests"             bash scripts/test.sh
+run "fixture replay"         bash scripts/replay.sh
 
 echo
 echo "=============================================================="

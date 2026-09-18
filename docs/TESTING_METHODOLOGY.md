@@ -26,12 +26,43 @@ its tier.
 ## 2. Running Tier A
 
 ```bash
-bash scripts/verify.sh   # lint + no-enforcement guard + unit tests
+bash scripts/verify.sh   # lint + no-enforcement guard + unit tests + fixture replay
 bash scripts/lint.sh     # luac5.4 -p over every .lua
 bash scripts/test.sh     # pure-Lua unit tests
+bash scripts/replay.sh   # fixture replay
 ```
 
-Current: **162 unit tests, 29 Lua files linted, guard self-test + 13-case matrix.**
+Current: **378 unit tests, 53 Lua files linted, guard self-test + 13-case matrix,
+3 fixtures replayed.**
+
+## 2.1 The fixture replay harness
+
+`tests/replay.lua` replays a recorded input through the real detector pipeline and
+compares the outcome against what the fixture says should happen. The contract is in
+`lab/fixtures/README.md`. Four things it enforces mechanically, each verified by trying
+to violate it:
+
+| Enforced | How it was verified |
+| --- | --- |
+| **A fixture is never rewritten to match new code.** `--write` only fills in a *missing* `expected` block and refuses to replace one. | Ran `--write` against a complete fixture; it refused with the reason and exit 1. |
+| **A regression is caught.** | Changed `POSTURE-005` from `medium` to `low`; replay failed with `SEVERITY POSTURE-005: expected medium, got low`. |
+| **A false-positive regression is caught.** | Made the detector emit a spurious extra detection; the hardened-server fixture failed with `UNEXPECTED SPURIOUS-EXTRA was produced`. |
+| **Provenance is mandatory, and a synthetic telemetry fixture is rejected.** | A fixture missing `meta` fields was rejected field by field; a `telemetry` fixture declaring `origin: synthetic` was rejected with the reason. |
+
+Two design choices worth stating:
+
+- **Comparison is on signal, severity and confidence — never on prose.** Explanations
+  are expected to improve; comparing them would break every fixture on an editorial
+  change and train everyone to rewrite fixtures, defeating the first rule.
+- **Origins are reported separately** (`3 synthetic, 0 capture`), and a run with no
+  captures says so explicitly. A green replay must not imply coverage that does not
+  exist: synthetic fixtures prove the logic behaves as specified, and only captures say
+  anything about real behaviour.
+
+A **`posture` fixture is legitimately synthetic** — the detector's input is a ConVar
+snapshot, which *is* configuration, so a hand-written snapshot is the real thing. A
+**telemetry fixture must be a capture**, because a hand-written `weaponDamageEvent`
+proves only that we can imagine one. There are none yet.
 
 ## 3. The pyramid
 

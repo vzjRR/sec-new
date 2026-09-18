@@ -112,8 +112,11 @@ Shipping order by defensibility (`DETECTION_MODEL.md` §7):
 ## Phase 5 — Correlation · **TODO**
 Multi-signal `RiskAssessment` with argued independence and documented weights.
 
-## Phase 6 — Lab automation · **TODO**
-Scenario runner: start, collect, record, compare expected vs actual, report.
+## Phase 6 — Lab automation · **partly started**
+The fixture replay harness (`tests/replay.lua`) already does the *compare expected vs
+actual and report* half, for anything reducible to a recorded input. What remains is
+the Tier B side: driving a scenario on a live server and capturing its telemetry into
+a fixture. The harness is the target format for those captures.
 
 ## Phase 7 — Dashboard · **TODO**
 Phase 1 scope only: server status, player list, recent telemetry, recent detections,
@@ -156,5 +159,9 @@ detection; only measurement does.
    breaker, the detector, and the adapters. The full vertical slice
    (audit → detector → registry → incident → investigation bundle) is covered by one
    test.
-3. Build the fixture replay harness so Tier B captures become regression tests.
+3. ~~Build the fixture replay harness~~ — **done**: `scripts/replay.sh`, three posture
+   fixtures, and mechanical enforcement of "a fixture is never rewritten to match new
+   code". It is wired into `scripts/verify.sh`.
 4. Write the `detectors/*/` design specs for detectors 2–5.
+5. Add a `system`-category telemetry record per posture audit, so configuration drift
+   becomes visible in the evidence store over time.
