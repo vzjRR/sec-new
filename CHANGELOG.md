@@ -10,6 +10,27 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
 ### Phase 1 — Foundation, and Phase 2 telemetry core
 
 #### Added — documentation
+- `docs/SECURITY_MODEL.md` — adversary model A1–A8, explicit claims and non-claims,
+  defence-in-depth ordering, kill chain and where we intervene.
+- `docs/TRUST_BOUNDARY.md` — per-boundary trust rules and the confidence caps that
+  follow from them.
+- `docs/DETECTION_MODEL.md` — detector contract, `DetectionResult`, confidence bands
+  and hard caps, incident lifecycle, the 7 planned detectors in shipping order.
+- `docs/TESTING_METHODOLOGY.md` — two-tier topology and the 8 gating experiments
+  (`EXP-001` … `EXP-008`).
+- `docs/FALSE_POSITIVE_POLICY.md` — why a false positive costs more than a miss.
+- `docs/PERFORMANCE_BUDGET.md` — declared intents (not measurements), poll-interval
+  justifications, storage problem, back-out thresholds.
+- `docs/ROADMAP.md` — phase status and the critical path.
+- `agents/` — 18 role charters plus an index, each naming its verified surface,
+  blockers, definition of done and anti-patterns.
+- `knowledge/` — 6 seed entries: 3 research findings and 3 architecture decisions.
+- `detectors/README.md` and `detectors/server/POSTURE-AUDIT.md` — the first detector
+  design spec.
+- `README.md`, `SECURITY.md`, `LICENSE`, `.gitignore`.
+- `config/README.md` — generated from the config schema by
+  `scripts/gen-config-docs.sh`, so the reference cannot drift from the code.
+
 - `docs/ENVIRONMENT_AUDIT.md` — TASK 001 environment discovery.
 - `docs/ARCHITECTURE.md` — TASK 002 security architecture.
 - `docs/TELEMETRY_SCHEMA.md` — versioned `TelemetryRecord` contract (schema version 1).
