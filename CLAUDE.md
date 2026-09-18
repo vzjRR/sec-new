@@ -280,5 +280,7 @@ inside a FiveM server.** That is a consequence of C2, not an oversight.
 `docs/TESTING_METHODOLOGY.md`. `EXP-001` and `EXP-002` block all aim and combat
 detection work.
 
-**Next:** the `detectors/*/` design specs for detectors 2–5, and a `system`-category
-telemetry record per posture audit so configuration drift becomes visible over time.
+**Next:** implement `entity.rate` (detector 3) — the only remaining detector not
+blocked by an experiment, though enabling it still needs a population baseline from the
+lab. Then a `system`-category telemetry record per posture audit so configuration drift
+becomes visible over time.

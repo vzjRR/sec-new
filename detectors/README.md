@@ -30,16 +30,36 @@ get implemented.
 
 ## Domains
 
-| Directory | Scope | First detector |
+| # | Spec | Status |
 | --- | --- | --- |
-| `server/` | The server's own configuration and posture | `server.posture` — **implemented** |
-| `events/` | Net-event contracts | `events.contract` (EXP-006) |
-| `entities/` | Entity creation and lifecycle | `entity.rate` |
-| `movement/` | Position and velocity plausibility | `movement.plausibility` |
-| `combat/` | Damage claims, engagement statistics | `combat.dead_shooter` (EXP-007) |
-| `aim/` | Camera and target acquisition | **blocked on EXP-001** |
-| `economy/` | Money, items, jobs | blocked on EXP-006 |
-| `player-state/` | Health, armour, weapon plausibility | — |
+| 1 | [`server/POSTURE-AUDIT.md`](server/POSTURE-AUDIT.md) | **implemented and wired** (Tier A) |
+| 2 | [`events/EVENT-CONTRACT.md`](events/EVENT-CONTRACT.md) | design — blocked on EXP-006 |
+| 3 | [`entities/ENTITY-RATE.md`](entities/ENTITY-RATE.md) | design — **not experiment-blocked** |
+| 4 | [`combat/DEAD-SHOOTER.md`](combat/DEAD-SHOOTER.md) | design — blocked on EXP-007 |
+| 5 | [`movement/MOVEMENT-PLAUSIBILITY.md`](movement/MOVEMENT-PLAUSIBILITY.md) | design — highest FP risk |
+| 6 | `combat/` sequence statistics | not started — blocked on EXP-002 |
+| 7 | `aim/` | not started — **blocked on EXP-001** |
+| — | `economy/` | not started — blocked on EXP-006 |
+| — | `player-state/` | not started |
+
+### What the specs are actually for
+
+Reading them in order, the pattern is deliberate: each one's longest section is its
+**false-positive analysis**, and the further down the list a detector sits, the longer
+that section gets. `movement.plausibility` has nine scenarios of which **eight are
+legitimate cases** — that ratio is the honest reflection of where the difficulty lies.
+
+Two framing decisions came out of writing them and are worth knowing before reading:
+
+- `movement.plausibility` detects **unexplained** displacement, not "impossible"
+  movement. An impossible displacement and a lag spike are identical in the data, so
+  "impossible" would be a claim the data cannot support. It walks an attribution ladder
+  and fires only on what no known cause explains — including a rung for *our own
+  sampler having stalled*, because treating a late poll as a teleport would manufacture
+  detections from our own scheduling.
+- `combat.dead_shooter` deliberately does **not** use `weaponDamageEvent.damageTime`,
+  so `EXP-002` does not block it. It uses our own observed arrival time, which needs no
+  characterisation.
 
 `server/` is an addition to the original structure. The charter permits adjusting the
 layout where inspection shows something better, and the posture audit needed a home: it

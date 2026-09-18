@@ -135,6 +135,29 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
 - The harness reports origins separately and states plainly when there are no captured
   fixtures, so a green run cannot imply coverage that does not exist.
 
+#### Added — detector design specs 2–5
+Per charter §18 a detector needs a design before an implementation, so these exist
+before any code and are reviewable on their false-positive analysis alone:
+- `detectors/events/EVENT-CONTRACT.md` — arity, type, frequency and caller-state
+  violations. The insight: a legitimate client never sends the wrong argument count,
+  because the resource's own client script fixes it, so a malformed call is close to
+  proof of tampering with *that resource* — and the finding is about an event, not a
+  person. Notes that a stale contract after a resource update is the realistic false
+  positive, and downgrades rather than accuses in that case.
+- `detectors/entities/ENTITY-RATE.md` — creation rate and provenance. Leads with the
+  point that `sv_entityLockdown` defaults to `inactive`, so on a default server spawn
+  abuse is a *permitted operation* and recommending this detector first would be
+  advising an operator to monitor a door they left open. Records the real gap that
+  `entityCreating` carries no owner and `NetworkGetEntityOwner` is client-side.
+- `detectors/combat/DEAD-SHOOTER.md` — damage claims after a server-observed death.
+  The cleanest cross-reference available: a `claimed` payload checked against an
+  `observed` death. Deliberately does **not** use `damageTime`, so EXP-002 does not
+  block it.
+- `detectors/movement/MOVEMENT-PLAUSIBILITY.md` — reframed from "impossible" to
+  **unexplained** displacement, because an impossible displacement and a lag spike are
+  identical in the data. Walks an attribution ladder whose last rung is *our own
+  sampler having stalled*.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state

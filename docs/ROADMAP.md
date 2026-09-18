@@ -162,6 +162,8 @@ detection; only measurement does.
 3. ~~Build the fixture replay harness~~ — **done**: `scripts/replay.sh`, three posture
    fixtures, and mechanical enforcement of "a fixture is never rewritten to match new
    code". It is wired into `scripts/verify.sh`.
-4. Write the `detectors/*/` design specs for detectors 2–5.
-5. Add a `system`-category telemetry record per posture audit, so configuration drift
+4. ~~Write the `detectors/*/` design specs for detectors 2–5~~ — **done**.
+5. Implement `entity.rate` (detector 3), the only remaining detector not blocked by an
+   experiment — though enabling it still needs a population baseline from the lab.
+6. Add a `system`-category telemetry record per posture audit, so configuration drift
    becomes visible in the evidence store over time.
