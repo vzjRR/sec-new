@@ -6,9 +6,11 @@
 -- Make the resources' pure logic requireable by its in-resource path.
 local TELEMETRY = 'resources/[vzjrr-security]/security-telemetry/'
 local CORE      = 'resources/[vzjrr-security]/security-core/'
+local FORENSICS = 'resources/[vzjrr-security]/security-forensics/'
 package.path = table.concat({
   TELEMETRY .. '?.lua',
   CORE .. '?.lua',
+  FORENSICS .. '?.lua',
   './?.lua',
   package.path,
 }, ';')

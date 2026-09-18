@@ -50,11 +50,30 @@ Charter §26 requires proving `FiveM → telemetry → normalized → storage �
 investigation output` for a **single** event type before widening coverage. That
 demonstration is the next Tier B milestone.
 
-## Phase 3 — Forensics · **TODO**
+## Phase 3 — Forensics · **core DONE (Tier A)**
 
-Event timeline · evidence store · incident model (`OBSERVING → INVESTIGATING →
-CONFIRMED / DISMISSED → RESOLVED`) · correlation IDs · investigation API. Mostly pure,
-so mostly Tier-A verifiable.
+| Item | Status |
+| --- | --- |
+| `DetectionResult` type with the confidence policy **enforced in code** | DONE |
+| Incident model + lifecycle state machine | DONE |
+| Gap-aware timeline assembly | DONE |
+| Evidence store (persistence of incidents/timelines) | TODO |
+| Investigation API / export | TODO |
+
+Three properties are worth noting, because they turn documented policy into
+mechanism rather than prose:
+
+- **Confidence caps are applied by construction.** `detection.new()` clamps a
+  claimed-only detection to 0.5 and anything built on an uncharacterised native
+  (EXP-001, EXP-002) to 0.3, records the original request, and names the blocking
+  experiment. A detector cannot claim more than its evidence supports even if its
+  author wants to.
+- **The incident lifecycle refuses to erase mistakes.** `CONFIRMED → DISMISSED` is
+  not an allowed transition; withdrawing a confirmation goes through `RESOLVED` with
+  a recorded reason. `CONFIRMED` and `DISMISSED` both require a stated basis.
+- **Incident confidence is `max`, not a sum.** Combining confidences requires arguing
+  independence, which is Phase 5 work. Until then `max` is the honest answer and the
+  summary says so.
 
 ## Phase 4 — First detectors · partly **BLOCKED**
 
@@ -112,7 +131,8 @@ detection; only measurement does.
 3. Then `EXP-001` and `EXP-002`, which unblock the aim and combat work.
 
 **Tier A (can proceed without the lab):**
-1. Phase 3 forensics: incident model and timeline are pure logic and fully testable here.
-2. Wire `server.posture` as a formal detector emitting `DetectionResult`s.
-3. Build the fixture replay harness so Tier B captures become regression tests.
-4. Write the `detectors/*/` design specs for detectors 2–5.
+1. ~~Phase 3 forensics core~~ — **done**: detection type, incident lifecycle, timeline.
+2. Evidence store and investigation export (the remaining Phase 3 items).
+3. Wire `server.posture` as a formal detector emitting `DetectionResult`s.
+4. Build the fixture replay harness so Tier B captures become regression tests.
+5. Write the `detectors/*/` design specs for detectors 2–5.

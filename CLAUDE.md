@@ -243,7 +243,8 @@ State honestly what was *not* verified. Tier A passing is not Tier B passing.
 telemetry schema + validator; clock, envelope, normalizers, bounded buffer;
 LAB/PRODUCTION mode; typed config; structured logger; ConVar posture auditor;
 `security-core` and `security-telemetry` resources with adapters; the no-enforcement
-guard; 162 unit tests.
+guard; Phase 3 forensics core (detection type with enforced confidence caps, incident
+lifecycle, gap-aware timeline); **237 unit tests**.
 
 **Not verified:** anything requiring FXServer. **Nothing in this repository has yet run
 inside a FiveM server.** That is a consequence of C2, not an oversight.
@@ -252,6 +253,6 @@ inside a FiveM server.** That is a consequence of C2, not an oversight.
 `docs/TESTING_METHODOLOGY.md`. `EXP-001` and `EXP-002` block all aim and combat
 detection work.
 
-**Next:** Phase 3 forensics (incident model, timelines, evidence store), then the first
-detector — the **ConVar posture audit**, because it has zero false-positive risk against
-players and hardens the server even when nobody is cheating.
+**Next:** the remaining Phase 3 items (evidence store, investigation export), then wire
+the **ConVar posture audit** as a formal detector — it has zero false-positive risk
+against players and hardens the server even when nobody is cheating.

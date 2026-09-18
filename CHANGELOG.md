@@ -57,11 +57,29 @@ Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured he
 - `security-telemetry` resource: event adapters, pollers, identity resolution,
   memory/jsonl/stdout sinks.
 
+#### Added — Phase 3 forensics core (pure, unit-tested)
+- `security-forensics/logic/detection.lua` — the `DetectionResult` type with the
+  confidence policy **enforced by construction**: claimed-only detections are capped
+  at 0.5, anything built on an uncharacterised native (EXP-001 camera rotation,
+  EXP-002 `damageTime`) is capped at 0.3, the original request is preserved for audit,
+  and each cap names its reason. An undeclared trust basis fails closed. An explanation
+  shorter than 30 characters is rejected, because "score 0.87" is not evidence.
+- `security-forensics/logic/incident.lua` — incident model and lifecycle. `CONFIRMED`
+  and `DISMISSED` both require a stated basis; `CONFIRMED → DISMISSED` is deliberately
+  not an allowed transition, so withdrawing a confirmation leaves a trace via
+  `RESOLVED`. Confidence aggregation is `max`, not a sum, because combining
+  confidences requires arguing independence (Phase 5).
+- `security-forensics/logic/timeline.lua` — gap-aware timeline assembly. A missing
+  `seq` is detectable, so lost evidence becomes a first-class timeline entry rather
+  than a silent hole an investigator would read as continuity. Filtered timelines
+  suppress false gap reports. `trust_summary()` states how much of a story the
+  attacker controlled.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state
   mutation, with a self-test.
-- `tests/harness.lua` + 162 unit tests.
+- `tests/harness.lua` + **237 unit tests**.
 
 #### Findings
 - **OBSERVATION** — FXServer build 35945 requires a valid `sv_licenseKey`. The
