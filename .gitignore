@@ -1,0 +1,25 @@
+# FXServer artifacts and local lab runtime (never committed; see docs/ENVIRONMENT_AUDIT.md §6.2)
+lab/server/alpine/
+lab/server/*.tar.xz
+lab/server/fx.tar.xz
+.fxlab/
+
+# Telemetry output. Evidence is local to a server; only curated FIXTURES are committed.
+telemetry/
+*.jsonl
+!lab/fixtures/**/*.jsonl
+
+# Analysis databases, derived from JSONL and always reproducible
+*.sqlite
+*.sqlite3
+*.db
+
+# Node (dashboard / offline analysis tooling)
+node_modules/
+package-lock.json
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/

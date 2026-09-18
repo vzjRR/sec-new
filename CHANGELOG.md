@@ -1,0 +1,59 @@
+# Changelog
+
+All notable changes to the FiveM Security Lab.
+
+Tags follow `CLAUDE.md` §5: **FACT** (documented), **OBSERVATION** (measured here),
+**HYPOTHESIS** (untested).
+
+## [Unreleased]
+
+### Phase 1 — Foundation, and Phase 2 telemetry core
+
+#### Added — documentation
+- `docs/ENVIRONMENT_AUDIT.md` — TASK 001 environment discovery.
+- `docs/ARCHITECTURE.md` — TASK 002 security architecture.
+- `docs/TELEMETRY_SCHEMA.md` — versioned `TelemetryRecord` contract (schema version 1).
+- `docs/QBCORE_INTEGRATION.md` — QBCore posture, PII policy, event-audit surface.
+- `CLAUDE.md` — project charter for all future implementation work.
+
+#### Added — pure logic (unit-tested, Tier A)
+- `security-telemetry/logic/schema.lua` — record validation: envelope completeness,
+  category/trust enums, numbers-only measurements, mandatory unit suffixes, PII sweep.
+- `security-telemetry/logic/clock.lua` — injected time sources; clamps a regressing
+  monotonic clock and returns `nil` rather than `0` for an untrustworthy interval.
+- `security-telemetry/logic/envelope.lua` — single point of record construction.
+- `security-telemetry/logic/normalize.lua` — pure normalizers for `weaponDamageEvent`,
+  `explosionEvent`, entity lifecycle, player lifecycle, network, movement and aim samples.
+- `security-telemetry/logic/buffer.lua` — bounded ring buffer that counts drops.
+- `security-core/lib/mode.lua` — LAB/PRODUCTION, failing closed to PRODUCTION.
+- `security-core/lib/config.lua` — typed, bounded, self-documenting config schema.
+- `security-core/lib/logger.lua` — structured logging with an injected writer.
+- `security-core/lib/posture.lua` — ConVar posture auditor (8 checks).
+
+#### Added — adapters (Tier B verification pending)
+- `security-core` resource: boot, mode resolution, config, logging, health export,
+  posture audit on boot and on a timer, `security:status` command.
+- `security-telemetry` resource: event adapters, pollers, identity resolution,
+  memory/jsonl/stdout sinks.
+
+#### Added — verification
+- `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
+- `scripts/check_no_enforcement.lua` — build gate against enforcement and state
+  mutation, with a self-test.
+- `tests/harness.lua` + 162 unit tests.
+
+#### Findings
+- **OBSERVATION** — FXServer build 35945 requires a valid `sv_licenseKey`. The
+  documented `sv_lan` license-check bypass does **not** work (5 variants tested).
+  Recorded as a documentation discrepancy.
+- **FACT** — 0 of 6,416 GTA natives are server-callable; 360 of 943 Cfx natives are.
+- **FACT** — `GET_PLAYER_CAMERA_ROTATION` and `GET_PLAYER_FOCUS_POS` are server
+  natives under OneSync, so aim telemetry needs no trusted client agent.
+- **FACT** — `sv_stateBagStrictMode`, `sv_entityLockdown` and
+  `sv_filterRequestControl` all default to their permissive settings.
+- **OBSERVATION** — vanilla Lua 5.4 rejects CfxLua backtick hash literals and has no
+  `vector3`, which forces the pure-logic / thin-adapter split.
+
+#### Notes
+- No enforcement of any kind. Detectors are disabled by default.
+- **Nothing in this repository has yet run inside FXServer.**
