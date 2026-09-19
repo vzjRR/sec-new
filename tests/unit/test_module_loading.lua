@@ -45,6 +45,14 @@ local RESOURCES = {
     expect = { 'registry', 'server_posture' },
   },
   {
+    name = 'security-lab-exp',
+    dir = 'lab/experiments/security-lab-exp/',
+    files = { 'logic/source_scan.lua', 'logic/recorder.lua' },
+    -- dir is repo-relative rather than under ROOT: the lab harness deliberately
+    -- lives outside the protection resource set (docs/ARCHITECTURE.md §6).
+    expect = { 'source_scan', 'recorder' },
+  },
+  {
     name = 'security-forensics',
     dir = ROOT .. 'security-forensics/',
     files = { 'logic/detection.lua', 'logic/incident.lua', 'logic/timeline.lua',
@@ -171,6 +179,17 @@ H.test('security-core lists lib modules BEFORE server/main.lua', function()
   local main_at = entry_pos(m, 'server/main.lua')
   H.ok(main_at, 'server/main.lua must be listed')
   for _, rel in ipairs({ 'lib/mode.lua', 'lib/config.lua', 'lib/logger.lua', 'lib/posture.lua' }) do
+    local at = entry_pos(m, rel)
+    H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
+  end
+end)
+
+H.test('security-lab-exp lists logic BEFORE server/main.lua', function()
+  local fh = assert(io.open('lab/experiments/security-lab-exp/fxmanifest.lua', 'r'))
+  local m = fh:read('a'); fh:close()
+  local main_at = entry_pos(m, 'server/main.lua')
+  H.ok(main_at, 'server/main.lua must be listed')
+  for _, rel in ipairs({ 'logic/source_scan.lua', 'logic/recorder.lua' }) do
     local at = entry_pos(m, rel)
     H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
   end

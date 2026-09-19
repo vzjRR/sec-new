@@ -30,66 +30,47 @@ local FORBIDDEN = {
   { name = 'SetEntityRotation', why = 'do not mutate game state' },
 }
 
--- lab/ is excluded by only scanning these roots: simulators live in lab/ by design.
-local SCAN_ROOTS = { 'resources', 'detectors' }
+--[[
+  Scan roots.
+
+  `lab/` IS scanned. The charter exempts simulators from the observation-only rule,
+  but nothing in lab/ currently needs an exempted call, and leaving the directory
+  unscanned would mean a stray DropPlayer in a measurement harness went unnoticed.
+
+  Failing closed is the right default here: when a simulator genuinely needs one of
+  these calls to drive a test client, that exemption gets argued and recorded in
+  knowledge/decisions/ rather than being available silently from the start.
+]]
+local SCAN_ROOTS = { 'resources', 'detectors', 'lab' }
 
 --[[
-  Replace comment AND string-literal bodies with spaces, preserving line structure
-  and byte offsets so reported line numbers stay accurate.
+  Comment/string stripping comes from the canonical, unit-tested implementation in
+  lab/experiments/security-lab-exp/logic/source_scan.lua rather than a second copy
+  here.
 
-  Strings are tracked for two reasons: a '--' inside a string must not be mistaken
-  for a comment, and a forbidden name inside a string is not a call. Blanking both
-  makes the scan see only real code.
+  Why share it: the parsing is subtle -- long comments, long strings, escapes, and
+  byte-offset preservation so reported line numbers stay accurate -- and two copies
+  would drift, with a fix to one silently not reaching the other. The self-test below
+  runs before every scan, so if this dependency ever breaks the guard fails loudly
+  (exit 2) instead of quietly passing everything, which is the failure mode that
+  already bit this script once.
 ]]
-local function strip_comments(src)
-  local out, i, n = {}, 1, #src
-  local function put(s) out[#out + 1] = s end
-  local function blank(s) put((s:gsub('[^\n]', ' '))) end
+package.path = table.concat({
+  'lab/experiments/security-lab-exp/?.lua',
+  './?.lua',
+  package.path,
+}, ';')
 
-  while i <= n do
-    local c = src:sub(i, i)
-    local two = src:sub(i, i + 1)
-
-    if two == '--' then
-      -- long comment?
-      local lb_eq, lb_end = src:match('^%-%-%[(=*)%[', i)
-      if lb_eq then
-        local close = ']' .. lb_eq .. ']'
-        local stop = src:find(close, i, true)
-        local body_end = stop and (stop + #close - 1) or n
-        blank(src:sub(i, body_end))
-        i = body_end + 1
-      else
-        local nl = src:find('\n', i, true) or (n + 1)
-        blank(src:sub(i, nl - 1))
-        i = nl
-      end
-    elseif c == '"' or c == "'" then
-      local q, j = c, i + 1
-      while j <= n do
-        local ch = src:sub(j, j)
-        if ch == '\\' then j = j + 2
-        elseif ch == q or ch == '\n' then j = j + 1; break
-        else j = j + 1 end
-      end
-      blank(src:sub(i, j - 1))
-      i = j
-    else
-      local lb_eq = src:match('^%[(=*)%[', i)
-      if lb_eq then
-        local close = ']' .. lb_eq .. ']'
-        local stop = src:find(close, i, true)
-        local body_end = stop and (stop + #close - 1) or n
-        blank(src:sub(i, body_end))
-        i = body_end + 1
-      else
-        put(c)
-        i = i + 1
-      end
-    end
-  end
-  return table.concat(out)
+local ok_scan, source_scan = pcall(require, 'logic.source_scan')
+if not ok_scan then
+  io.write('GUARD CANNOT RUN: could not load logic.source_scan: ',
+    tostring(source_scan), '\n')
+  io.write('This guard will not silently pass. Restore the module or vendor a '
+    .. 'stripper here.\n')
+  os.exit(2)
 end
+
+local strip_comments = source_scan.strip_lua
 
 --- Find forbidden calls in already-stripped source.
 -- @return list of { line, name, why, text }
