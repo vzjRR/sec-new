@@ -84,6 +84,55 @@ M.SCHEMA = {
     default = 60000, type = 'number', min = 5000, max = 600000,
     doc = 'Give up resolving a citizenid after this long; the session stays SRC-keyed.',
   },
+  --[[
+    entity.rate thresholds. A THRESHOLD OF 0 MEANS "NOT CONFIGURED" and produces no
+    detections -- deliberately, and this is the default.
+
+    A creation rate is only abnormal relative to THIS server's own population: a
+    racing server spawns vehicles constantly where a roleplay server barely does.
+    Shipping a number would mean shipping a guess, and charter §21 forbids turning a
+    hypothesis into a threshold. The detector still counts while unconfigured, so the
+    baseline can be derived from real data -- observatory first.
+  ]]
+  ['detectors.entity_rate.window_ms'] = {
+    default = 60000, type = 'number', min = 1000, max = 600000,
+    doc = 'Sliding window for the creation-rate count.',
+  },
+  ['detectors.entity_rate.max_per_window'] = {
+    default = 0, type = 'number', min = 0, max = 100000,
+    doc = '0 = NOT CONFIGURED, no rate detections. Set from an observed baseline '
+       .. 'once Phase 2 has run on the lab; a guessed value produces false positives.',
+  },
+  ['detectors.entity_rate.churn_window_ms'] = {
+    default = 5000, type = 'number', min = 500, max = 600000,
+    doc = 'Sliding window for counting create/remove churn.',
+  },
+  ['detectors.entity_rate.churn_lifetime_ms'] = {
+    default = 2000, type = 'number', min = 50, max = 60000,
+    doc = 'An entity removed within this long of creation counts as churn.',
+  },
+  ['detectors.entity_rate.min_churn_n'] = {
+    default = 0, type = 'number', min = 0, max = 10000,
+    doc = '0 = NOT CONFIGURED, no churn detections. Needs a baseline like the rate.',
+  },
+  ['detectors.entity_rate.redetect_ms'] = {
+    default = 30000, type = 'number', min = 1000, max = 3600000,
+    doc = 'Minimum gap between repeat detections of the same signal for one player, '
+       .. 'so a sustained burst is one finding rather than hundreds.',
+  },
+  ['detectors.entity_rate.max_keys'] = {
+    default = 512, type = 'number', min = 16, max = 65536,
+    doc = 'Bound on tracked player/type windows. Eviction is counted and downgrades '
+       .. 'any detection built on a lossy window (charter §15).',
+  },
+  ['detectors.entity_rate.max_events_per_key'] = {
+    default = 256, type = 'number', min = 8, max = 65536,
+    doc = 'Bound on events held per window key.',
+  },
+  ['detectors.entity_rate.max_tracked_entities'] = {
+    default = 4096, type = 'number', min = 64, max = 262144,
+    doc = 'Bound on live entity handles tracked for churn pairing.',
+  },
   ['detectors.enabled'] = {
     default = false, type = 'boolean',
     doc = 'Detection is OFF by default. Phase 2 is observation only (charter §4).',

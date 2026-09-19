@@ -103,7 +103,7 @@ Shipping order by defensibility (`DETECTION_MODEL.md` §7):
 | --- | --- | --- |
 | 1 | `server.posture` | **DONE (Tier A)** — registry + detector + adapter wired |
 | 2 | `events.contract` | BLOCKED on EXP-006 |
-| 3 | `entity.rate` | TODO |
+| 3 | `entity.rate` | **DONE (Tier A)** — silent by default until a baseline exists |
 | 4 | `combat.dead_shooter` | BLOCKED on EXP-007 |
 | 5 | `movement.plausibility` | TODO — needs the full legitimate-cause list |
 | 6 | `combat.sequence` | BLOCKED on EXP-002 |
@@ -163,7 +163,9 @@ detection; only measurement does.
    fixtures, and mechanical enforcement of "a fixture is never rewritten to match new
    code". It is wired into `scripts/verify.sh`.
 4. ~~Write the `detectors/*/` design specs for detectors 2–5~~ — **done**.
-5. Implement `entity.rate` (detector 3), the only remaining detector not blocked by an
-   experiment — though enabling it still needs a population baseline from the lab.
+5. ~~Implement `entity.rate`~~ — **done**, silent by default: every threshold defaults
+   to 0 (not configured), so it counts without accusing anyone until the lab provides a
+   baseline.
 6. Add a `system`-category telemetry record per posture audit, so configuration drift
    becomes visible in the evidence store over time.
+7. Build the `player-state/` rolling model that `MOVEMENT-PLAUSIBILITY` will need.

@@ -20,11 +20,14 @@ dependency 'security-forensics'
   it as an INJECTED function, obtained through an export that passes plain tables
   only (see logic/registry.lua and EXP-010).
 
-  Order is load-bearing: registry.lua before any detector that registers with it.
+  Order is load-bearing: registry.lua and window.lua before any detector that uses
+  them, and every logic module before server/main.lua, which asserts on them.
 ]]
 server_scripts {
     'logic/registry.lua',
+    'logic/window.lua',
     'logic/server_posture.lua',
+    'logic/entity_rate.lua',
     'server/main.lua',
 }
 

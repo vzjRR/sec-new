@@ -158,13 +158,38 @@ before any code and are reviewable on their false-positive analysis alone:
   identical in the data. Walks an attribution ladder whose last rung is *our own
   sampler having stalled*.
 
+#### Added — detector #3 `entity.rate`, and the LAB experiment harness
+- `lab/experiments/security-lab-exp` + `-peer` — a LAB-only measuring instrument that
+  runs EXP-001…EXP-010 on a live server. Six run at boot with no player; four are
+  console-only commands because they need a human doing something specific. Refuses to
+  start outside LAB mode and fails closed if the mode cannot be read.
+  `lab/experiments/README.md` is the runbook.
+- `security-detectors/logic/window.lua` — a bounded sliding-window counter, bounded on
+  both axes (events per key, number of keys) with LRU eviction. Eviction is **counted**,
+  because a count taken after silent drops understates a rate, which for a rate detector
+  means silently failing to detect.
+- `security-detectors/logic/entity_rate.lua` — detector #3, **silent by default**: every
+  threshold defaults to 0 meaning NOT CONFIGURED. A creation rate is only abnormal
+  relative to this server's own population, so shipping a number would ship a guess. It
+  still counts while silent, so the baseline can be derived from real data.
+  Resource-owned entities are excluded (the most likely false positive), unattributed
+  creations are counted but never guessed at, and a lossy window caps confidence at 0.3.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state
   mutation, with a self-test.
-- `tests/harness.lua` + **378 unit tests**.
+- `tests/harness.lua` + **477 unit tests**.
 
 #### Fixed
+- **`entity.rate` never reported a churn burst that ended in removals.** Churn was
+  evaluated only when the next entity was created, so create/remove cycling — its
+  natural shape — produced nothing. Now evaluated on removal too, through one shared
+  implementation.
+- **A test used `fired = fired or d(...)`**, which short-circuits: once a detection
+  happened the detector was never called again and every later event was silently
+  dropped. It masked the churn gap above and a lossy-window test. Replaced with a
+  helper that always evaluates the call.
 - **A manifest-ordering test passed on prose.** It searched the manifest for
   `server/main.lua` as a bare substring, and one manifest's comment mentions that path
   while explaining load order — so the match landed in the comment and the assertion

@@ -17,11 +17,16 @@ end
 
 local registry_lib = need('registry')
 local posture_det  = need('server_posture')
+local entity_rate  = need('entity_rate')
 
 local RESOURCE = GetCurrentResourceName()
 
 local State = { ready = false, registry = nil, cfg = nil, last_run_mono = nil,
-                runs_n = 0, results_n = 0, errors_n = 0 }
+                runs_n = 0, results_n = 0, errors_n = 0,
+                -- Per-detector rolling state. The detector is pure; the adapter owns
+                -- the state it transitions, which keeps the detector deterministic
+                -- and testable (CLAUDE.md §11).
+                entity_state = nil, records_n = 0 }
 
 local function log(level, msg, fields)
   local parts = {}
@@ -105,6 +110,13 @@ local function boot()
     return
   end
 
+  State.entity_state = entity_rate.new_state(State.cfg)
+  local ok_er, err_er = State.registry:register(
+    entity_rate.spec({ detection_new = detection_new }))
+  if not ok_er then
+    log('error', 'could not register entity.rate', { err = tostring(err_er) })
+  end
+
   State.ready = true
   log('info', 'detector registry ready', {
     detectors = table.concat(State.registry:ids(), ','),
@@ -129,15 +141,65 @@ local function boot()
   end)
 end
 
+--[[
+  Feed one telemetry record to the record detectors.
+
+  security-telemetry calls this; results are recorded as evidence and nothing else
+  happens. Wrapped so a detector fault can never propagate into the telemetry hot
+  path -- an anti-cheat that breaks observability is worse than one that misses.
+]]
+local function on_record(record)
+  if not State.ready or type(record) ~= 'table' then return 0 end
+  State.records_n = State.records_n + 1
+
+  local results, errors = State.registry:run_record(
+    State.entity_state, record, State.cfg)
+
+  local forensics = exports['security-forensics']
+  for _, r in ipairs(results) do
+    pcall(function() forensics:recordDetection(r) end)
+  end
+  for _, e in ipairs(errors) do
+    log('error', 'record detector error', { detector = e.detector_id, err = e.err })
+  end
+  State.results_n = State.results_n + #results
+  State.errors_n = State.errors_n + #errors
+  return #results
+end
+
+exports('onRecord', on_record)
+
+--- Forget a player's rolling state when they disconnect, so it cannot grow forever.
+AddEventHandler('playerDropped', function()
+  local src = source
+  pcall(function()
+    if not State.ready then return end
+    local key = 'SRC:' .. tostring(src)
+    entity_rate.forget(State.entity_state, key)
+  end)
+end)
+
+-- Housekeeping: drop idle window keys so an idle server's tables shrink.
+CreateThread(function()
+  while true do
+    Wait(60000)
+    if State.ready and State.entity_state then
+      pcall(function() entity_rate.prune(State.entity_state, GetGameTimer()) end)
+    end
+  end
+end)
+
 exports('health', function()
   return {
     ready         = State.ready,
     enabled       = State.cfg and State.cfg['detectors.enabled'] or false,
     detectors     = State.registry and State.registry:stats() or nil,
     runs_n        = State.runs_n,
+    records_n     = State.records_n,
     results_n     = State.results_n,
     errors_n      = State.errors_n,
     last_run_mono = State.last_run_mono,
+    entity_rate   = State.entity_state and entity_rate.stats(State.entity_state) or nil,
   }
 end)
 

@@ -13,6 +13,24 @@ observability at all, which is worse than running with a sane default.
 ```
 detectors.enabled = false  (boolean)
     Detection is OFF by default. Phase 2 is observation only (charter §4).
+detectors.entity_rate.churn_lifetime_ms = 2000  (number)
+    An entity removed within this long of creation counts as churn.
+detectors.entity_rate.churn_window_ms = 5000  (number)
+    Sliding window for counting create/remove churn.
+detectors.entity_rate.max_events_per_key = 256  (number)
+    Bound on events held per window key.
+detectors.entity_rate.max_keys = 512  (number)
+    Bound on tracked player/type windows. Eviction is counted and downgrades any detection built on a lossy window (charter §15).
+detectors.entity_rate.max_per_window = 0  (number)
+    0 = NOT CONFIGURED, no rate detections. Set from an observed baseline once Phase 2 has run on the lab; a guessed value produces false positives.
+detectors.entity_rate.max_tracked_entities = 4096  (number)
+    Bound on live entity handles tracked for churn pairing.
+detectors.entity_rate.min_churn_n = 0  (number)
+    0 = NOT CONFIGURED, no churn detections. Needs a baseline like the rate.
+detectors.entity_rate.redetect_ms = 30000  (number)
+    Minimum gap between repeat detections of the same signal for one player, so a sustained burst is one finding rather than hundreds.
+detectors.entity_rate.window_ms = 60000  (number)
+    Sliding window for the creation-rate count.
 framework.qbcore = true  (boolean)
     Enable QBCore enrichment. Degrades silently if qb-core is absent.
 framework.resolve_retry_ms = 2000  (number)

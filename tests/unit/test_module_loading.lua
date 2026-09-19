@@ -41,8 +41,9 @@ local RESOURCES = {
   {
     name = 'security-detectors',
     dir = ROOT .. 'security-detectors/',
-    files = { 'logic/registry.lua', 'logic/server_posture.lua' },
-    expect = { 'registry', 'server_posture' },
+    files = { 'logic/registry.lua', 'logic/window.lua',
+              'logic/server_posture.lua', 'logic/entity_rate.lua' },
+    expect = { 'registry', 'window', 'server_posture', 'entity_rate' },
   },
   {
     name = 'security-lab-exp',
@@ -200,7 +201,8 @@ H.test('security-detectors lists logic BEFORE server/main.lua', function()
   local m = fh:read('a'); fh:close()
   local main_at = entry_pos(m, 'server/main.lua')
   H.ok(main_at, 'server/main.lua must be listed')
-  for _, rel in ipairs({ 'logic/registry.lua', 'logic/server_posture.lua' }) do
+  for _, rel in ipairs({ 'logic/registry.lua', 'logic/window.lua',
+                         'logic/server_posture.lua', 'logic/entity_rate.lua' }) do
     local at = entry_pos(m, rel)
     H.ok(at and at < main_at, rel .. ' must be listed before server/main.lua')
   end

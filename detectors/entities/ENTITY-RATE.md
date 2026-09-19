@@ -1,7 +1,10 @@
 # `entity.rate` — client entity creation rate and provenance
 
-- **Status:** design. **Not blocked** — the first behavioural detector that can be
-  implemented without an experiment.
+- **Status:** **implemented (Tier A)**, and **silent by default**. Every threshold
+  defaults to 0, meaning NOT CONFIGURED, so it counts without accusing anyone until a
+  baseline exists. Boot and live behaviour unverified (Tier B).
+- **Implementation:** `security-detectors/logic/entity_rate.lua`, bounded counting in
+  `logic/window.lua`.
 - **Planned order:** detector #3
 - **Version:** 1 (planned)
 
@@ -101,9 +104,31 @@ explicitly **not** used per event — only on a slow timer, if at all.
 | `ENTITY-005` | **Legitimate:** admin spawning via the admin menu | **no detections** |
 | `ENTITY-006` | **Legitimate:** a server-run event spawning many entities | **no detections** |
 
+## As built
+
+Signals 1 (creation rate) and 4 (churn) are implemented. Signal 2 (scriptless) is
+deliberately folded in as an *exclusion* rather than a signal: an entity with an owning
+`GET_ENTITY_SCRIPT` is attributed to that resource and not counted against the player,
+which is the single most likely false positive. Whether every legitimate spawner sets a
+script is still EXP-006's question, so it is not yet used as a positive signal.
+Signals 3 and 5 are not implemented.
+
+Three things the implementation does that the original spec only implied:
+
+- **Churn is evaluated on removal as well as on creation.** The first version checked
+  it only when the next entity was created, which meant a churn burst that ended in
+  removals — the natural shape of create/remove cycling — was never reported at all.
+  A test caught it.
+- **A lossy counting window caps confidence at 0.3** and says so in the explanation. If
+  the bounded window evicted events, the count is a floor rather than a measurement,
+  and reporting it at full confidence would state a number the detector cannot stand
+  behind.
+- **A sustained burst is de-duplicated into one finding** (`redetect_ms`, default 30 s).
+  Otherwise a single incident would produce hundreds of detections and bury itself.
+
 ## Blockers
 
-None for a first implementation of signals 1, 3 and 4. Two things must be resolved
+None for a first implementation of signals 1 and 4. Two things must be resolved
 before it is trusted:
 
 1. **Owner attribution.** Without it, a rate cannot always be tied to a `player_key`.

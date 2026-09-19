@@ -89,6 +89,16 @@ local function emit(record)
 
   State.buffer:push(record)
   State.emitted_n = State.emitted_n + 1
+
+  --[[
+    Hand the record to the detector pipeline.
+
+    pcall'd and last: detection is downstream of observation, and a detector fault
+    must never cost us the telemetry record itself. The observatory keeps working
+    even when a detector does not.
+  ]]
+  pcall(function() exports['security-detectors']:onRecord(record) end)
+
   return true
 end
 

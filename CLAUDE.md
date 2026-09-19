@@ -271,7 +271,9 @@ guard; Phase 3 forensics complete (detection type with enforced confidence caps,
 incident lifecycle, gap-aware timeline, deterministic JSON codec, accountable evidence
 store, investigation bundle with a `review()` that refuses to bless an unsupportable
 conclusion); the detector registry and **`server.posture`, the first detector, wired
-end to end**; the fixture replay harness with 3 posture fixtures; **378 unit tests**.
+end to end**; **`entity.rate` (detector 3), silent by default until a baseline
+exists**; the fixture replay harness with 3 posture fixtures; the LAB experiment
+harness for EXP-001…EXP-010; **477 unit tests**.
 
 **Not verified:** anything requiring FXServer. **Nothing in this repository has yet run
 inside a FiveM server.** That is a consequence of C2, not an oversight.
@@ -280,7 +282,8 @@ inside a FiveM server.** That is a consequence of C2, not an oversight.
 `docs/TESTING_METHODOLOGY.md`. `EXP-001` and `EXP-002` block all aim and combat
 detection work.
 
-**Next:** implement `entity.rate` (detector 3) — the only remaining detector not
-blocked by an experiment, though enabling it still needs a population baseline from the
-lab. Then a `system`-category telemetry record per posture audit so configuration drift
-becomes visible over time.
+**Next:** run the LAB experiment harness on the live server
+(`lab/experiments/README.md`) and feed the results back — EXP-001 and EXP-002 unblock
+all aim and combat work, and EXP-006 unblocks the event contracts. Meanwhile, Tier A:
+a `system`-category telemetry record per posture audit, and the `player-state/` rolling
+model that movement detection needs.
