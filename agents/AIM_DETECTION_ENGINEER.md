@@ -50,11 +50,31 @@ separately for comparison.
 - tracking smoothness during target motion
 - repeated identical acquisition profiles across engagements
 
+## Evidence from a real sample (R-005)
+
+A real external cheat sample was statically analysed
+(`knowledge/research/R-005-external-cheat-sample-analysis.md`). Its aimbot ships with
+**configurable smoothing** (`aimbot_smooth_enabled`, `aimbot_smooth_speed`), which
+exists precisely because an instantaneous snap is obvious.
+
+Three things follow:
+
+- **A snap-magnitude detector would catch only the users who left smoothing off.** The
+  naive signal is defeated by a slider the user has already been given.
+- The sample's ESP features — two thirds of its surface — produce **no server-observable
+  effect at all**, confirming that the aimbot's camera movement is the entire
+  server-visible footprint of this class of tool.
+- The adversary holds a dial trading effectiveness for stealth, so expect a
+  *distribution* of behaviours across users rather than one signature, and expect the
+  true-positive rate to decay as users turn it down.
+
 ## Design rules
 1. **No single metric decides anything.** Not angular velocity, not snap time.
 2. **Consistency, not peak.** A skilled human's aim varies with fatigue, range and
    target difficulty. Assisted aim often varies *too little*. Absence of variance is the
-   interesting signal; a good shot is not.
+   interesting signal; a good shot is not. R-005 supports this: smoothed aim is
+   *generated*, and generated motion tends to be more self-consistent than human motion.
+   It remains a **HYPOTHESIS** until EXP-001 and real captures test it.
 3. **Confidence capped at 0.3** for anything derived from these natives until EXP-001
    completes (`DETECTION_MODEL.md` §3).
 4. **Network context mandatory.** Latency distorts every angular measurement.

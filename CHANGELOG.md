@@ -230,6 +230,17 @@ before any code and are reviewable on their false-positive analysis alone:
   `fxmanifest.lua` for `security-forensics`.
 
 #### Findings
+- **R-005 — static analysis of a real FiveM external cheat sample.** Analysis only;
+  nothing executed, binary never committed and deleted after analysis, hashes recorded.
+  It is an external overlay cheat (cross-process memory read/write, own D3D11 overlay,
+  `SetCursorPos` aim) with no injection, no driver, no network imports and no
+  persistence. The defensively useful output is the mapping of each feature to whether
+  it is server-observable: ESP produces **nothing**, while the aimbot and noclip are
+  visible through `GET_PLAYER_CAMERA_ROTATION` and `GET_ENTITY_COORDS`. This validates
+  the A5 blind spot, the no-client-component decision, and EXP-001's priority against a
+  real sample rather than against reasoning alone. Its **configurable aim smoothing** is
+  the key finding: a snap-magnitude detector would catch only users who left smoothing
+  off, which supports reasoning about variance rather than peak.
 - **OBSERVATION** — FXServer build 35945 requires a valid `sv_licenseKey`. The
   documented `sv_lan` license-check bypass does **not** work (5 variants tested).
   Recorded as a documentation discrepancy.

@@ -52,6 +52,13 @@ that way is a false-positive generator waiting for production.
 `AIM-001` is a measurement scenario first. There is nothing to detect until EXP-001 says
 what the camera natives do.
 
+**When `AIM-001` becomes a detection scenario, it must reproduce SMOOTHED aim, not
+instant snapping.** A real sample analysed in
+`knowledge/research/R-005-external-cheat-sample-analysis.md` ships with configurable
+smoothing, because instant snaps are obvious. A simulator that only generates snaps
+would validate a detector against a threat that barely exists — and would produce a
+detector that passes its own scenario while missing everyone who moved the slider.
+
 ## Anti-patterns
 - A "realistic" cheat when a telemetry generator would do
 - A simulator outside `lab/`

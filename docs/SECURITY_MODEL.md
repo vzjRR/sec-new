@@ -12,7 +12,7 @@ Who the adversary is, what they can do, and what this platform can honestly clai
 | **A2** | Event abuser | Reads resource client scripts, calls net events directly with crafted arguments | **Yes.** Contract violations are server-observed |
 | **A3** | Aim assistance user | Client-side aim modification; otherwise plays normally | **Partly.** Server has camera rotation, but characterisation is pending (EXP-001) |
 | **A4** | Economy exploiter | Abuses a vulnerable resource's server-side logic to gain money/items | **Yes, as a resource finding.** Deltas are server-side |
-| **A5** | Passive visual cheat user | Wallhack/ESP used without behavioural change | **No.** No server-observable consequence |
+| **A5** | Passive visual cheat user | Wallhack/ESP used without behavioural change | **No.** No server-observable consequence — confirmed against a real sample (R-005), where ESP is ~2/3 of the feature surface and produces nothing server-side |
 | **A6** | Careful adversary | Deliberately stays within plausible human performance | **Largely no.** Inherent to behavioural detection |
 | **A7** | Malicious resource author | Ships a resource the operator installs | **No.** Shares our process; out of scope |
 | **A8** | Host compromise | Owns the machine | **No.** Out of scope |
