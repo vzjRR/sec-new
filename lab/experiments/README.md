@@ -108,7 +108,17 @@ Re-prints and re-writes results at any time.
 
 ## Then send the results back
 
-Commit or paste:
+If Claude Code is running **on this machine**, just run:
+
+```bash
+bash scripts/collect-lab-results.sh /path/to/your/server/resources
+```
+
+It finds the results, validates them with this project's own JSON decoder, imports them
+into `lab/results/`, and prints which experiments concluded and which are still blocked.
+A corrupt or truncated file is reported rather than imported.
+
+Otherwise, commit or paste:
 
 - `security-lab-exp/results/experiments.json`
 - `security-lab-exp/results/event-inventory.json`

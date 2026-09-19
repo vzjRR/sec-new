@@ -175,6 +175,18 @@ before any code and are reviewable on their false-positive analysis alone:
   Resource-owned entities are excluded (the most likely false positive), unattributed
   creations are counted but never guessed at, and a lossy window caps confidence at 0.3.
 
+#### Added — handoff for a session with server access
+- `docs/LOCAL_SESSION.md` — what changes when the session runs on the FXServer machine:
+  Tier B becomes available, what to do in what order, what each experiment unblocks,
+  and what still needs a human in-game (nobody can automate moving the camera or dying).
+  States plainly that server access does not widen the charter.
+- `scripts/collect-lab-results.sh` — imports experiment results into `lab/results/`,
+  **validating them first** with this project's own JSON decoder. A truncated or
+  half-written file is reported and not imported, because a corrupt file silently
+  becoming "the evidence" is the failure this project keeps guarding against. It then
+  prints what concluded and, more importantly, what is STILL BLOCKED — which is what
+  stops someone filling the gap with a guessed threshold.
+
 #### Added — verification
 - `scripts/verify.sh`, `scripts/lint.sh`, `scripts/test.sh`.
 - `scripts/check_no_enforcement.lua` — build gate against enforcement and state

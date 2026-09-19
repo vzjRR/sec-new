@@ -96,6 +96,10 @@ ensure security-telemetry
 Then run `security:status` in the server console. It reports mode, uptime, whether the
 server is state-aware, and the ConVar posture summary.
 
+If you are running Claude Code **on the server machine**, read
+[`docs/LOCAL_SESSION.md`](docs/LOCAL_SESSION.md) first — Tier B is available there, and
+it says what to do in what order.
+
 **OneSync `on` is required.** Without it the server-side game events and camera natives
 do not exist, and `security-core` will report the platform as *blind* rather than degrade
 silently.
@@ -105,6 +109,7 @@ silently.
 | Document | What it covers |
 | --- | --- |
 | [`CLAUDE.md`](CLAUDE.md) | Charter for all implementation work — read first |
+| [`LOCAL_SESSION.md`](docs/LOCAL_SESSION.md) | **Running on the server machine?** Start here |
 | [`ENVIRONMENT_AUDIT.md`](docs/ENVIRONMENT_AUDIT.md) | Measured environment, verified native/event surface |
 | [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Components, data flow, assumptions, limitations |
 | [`SECURITY_MODEL.md`](docs/SECURITY_MODEL.md) | Adversaries, claims, and explicit non-claims |

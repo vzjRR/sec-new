@@ -189,6 +189,10 @@ bash scripts/replay.sh     # fixture replay
 | **A** | this container / CI | pure logic, schema, fixtures, replay | anything needing FXServer |
 | **B** | owner's private lab | resource boot, natives, events, performance, scenarios | — |
 
+**If this session is running on the machine that hosts FXServer, Tier B is available to
+you.** Read [`docs/LOCAL_SESSION.md`](docs/LOCAL_SESSION.md) — it says what changed, what
+to do in what order, and what still needs a human in-game.
+
 - Every detector needs unit tests, a false-positive test, a lab scenario, and a
   performance measurement before it is called done.
 - Tests assert on **error messages**, not just booleans — otherwise they pass for the
